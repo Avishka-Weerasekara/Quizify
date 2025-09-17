@@ -5,6 +5,7 @@ import Home from './Pages/Home';
 import LoginPage from './Pages/LoginPage';
 import SignupPage from './Pages/SignupPage';
 import NavigatePage from './Pages/NavigatePage';
+import HostPanel from './Pages/HostPanel';
 
 
 
@@ -19,6 +20,8 @@ const App = () => {
         <Route path='/login' element={<LoginPage/>} />
         <Route path='/signup' element={<SignupPage/>} />
         <Route path='/navigatepage' element={<NavigatePage/>} />
+        <Route path='/hostpanel' element={<HostPanel/>} />
+        
       </Routes>
    
   );

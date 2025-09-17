@@ -14,16 +14,16 @@ const NavigatePage = () => {
 
       <div className="flex gap-8">
         <button
-          onClick={() => navigate("/quiz")}
+          onClick={() => navigate("/hostpanel")}
           className="px-10 py-4 bg-white text-purple-700 font-semibold rounded-lg shadow-lg hover:bg-purple-100 transition"
         >
-          ENTER
+          HOST
         </button>
         <button
           onClick={() => navigate("/leaderboard")}
           className="px-10 py-4 bg-white text-purple-700 font-semibold rounded-lg shadow-lg hover:bg-purple-100 transition"
         >
-          LEADERBOARD
+          PLAYER
         </button>
       </div>
     </div>
