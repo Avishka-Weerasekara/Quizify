@@ -1,0 +1,4 @@
+db_username : buddhi00weerasekara_db_user
+password: fRKJ9FEAlAuCl4OK
+npm install mongodb
+mongodb+srv://buddhi00weerasekara_db_user:fRKJ9FEAlAuCl4OK@cluster0.w9acmu9.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
