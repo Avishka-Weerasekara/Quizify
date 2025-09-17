@@ -17,20 +17,7 @@ const Home = () => {
 
       <h1 className="text-5xl font-bold mb-16 drop-shadow-lg">Welcome to the Game</h1>
 
-      <div className="flex gap-8">
-        <button
-          onClick={() => navigate("/quiz")}
-          className="px-10 py-4 bg-white text-purple-700 font-semibold rounded-lg shadow-lg hover:bg-purple-100 transition"
-        >
-          ENTER
-        </button>
-        <button
-          onClick={() => navigate("/leaderboard")}
-          className="px-10 py-4 bg-white text-purple-700 font-semibold rounded-lg shadow-lg hover:bg-purple-100 transition"
-        >
-          LEADERBOARD
-        </button>
-      </div>
+      
     </div>
   );
 };

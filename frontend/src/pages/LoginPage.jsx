@@ -1,14 +1,18 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate(); // <-- Add this
 
   const handleLogin = (e) => {
     e.preventDefault();
     console.log("Login:", { email, password });
+    
     // TODO: call backend API for login
+    // After successful login, navigate to another page
+    navigate("/navigatepage"); // <-- Change "/dashboard" to your target page
   };
 
   return (
