@@ -1,73 +1,102 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth, db } from "../firebase-config"; // ✅ import from firebase.js
+import { doc, setDoc } from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
 
 export default function SignupPage() {
-  const [name, setName] = useState("");
+  const [name, setName] = useState(""); // Added name
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  const handleSignup = (e) => {
+  const navigate = useNavigate(); // for redirect after signup
+
+  const handleSignup = async (e) => {
     e.preventDefault();
-    if (password !== confirmPassword) {
-      alert("Passwords do not match!");
-      return;
+    setError("");
+    setSuccess("");
+
+    try {
+      // Create user with Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Save additional user info in Firestore
+      await setDoc(doc(db, "users", user.uid), {
+        name,
+        email,
+        createdAt: new Date(),
+      });
+
+      setSuccess("Signup successful! 🎉");
+      setName("");
+      setEmail("");
+      setPassword("");
+
+      // Redirect to login after 2 seconds
+      setTimeout(() => navigate("/login"), 2000);
+
+    } catch (err) {
+      // Handle specific Firebase errors
+      if (err.code === "auth/email-already-in-use") {
+        setError("This email is already registered. Try logging in.");
+      } else if (err.code === "auth/invalid-email") {
+        setError("Invalid email address.");
+      } else if (err.code === "auth/weak-password") {
+        setError("Password should be at least 6 characters.");
+      } else {
+        setError(err.message);
+      }
     }
-    console.log("Signup:", { name, email, password });
-    // TODO: call backend API for signup
   };
 
   return (
-    <div className="max-w-md mx-auto mt-10 bg-white p-8 shadow-lg rounded-xl">
-      <h2 className="text-2xl font-bold mb-6 text-center">Sign Up</h2>
-      <form onSubmit={handleSignup} className="space-y-4">
+    <div className="flex justify-center items-center h-screen bg-gray-100">
+      <form
+        onSubmit={handleSignup}
+        className="bg-white p-6 rounded-xl shadow-md w-80"
+      >
+        <h2 className="text-2xl font-bold mb-4 text-center">Sign Up</h2>
+
+        {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
+        {success && <p className="text-green-500 text-sm mb-2">{success}</p>}
+
         <input
           type="text"
           placeholder="Full Name"
+          className="border p-2 w-full mb-3 rounded"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full border p-3 rounded-lg"
           required
         />
+
         <input
           type="email"
           placeholder="Email"
+          className="border p-2 w-full mb-3 rounded"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full border p-3 rounded-lg"
           required
         />
+
         <input
           type="password"
           placeholder="Password"
+          className="border p-2 w-full mb-3 rounded"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full border p-3 rounded-lg"
           required
         />
-        <input
-          type="password"
-          placeholder="Confirm Password"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          className="w-full border p-3 rounded-lg"
-          required
-        />
+
         <button
           type="submit"
-          className="w-full bg-green-600 text-white p-3 rounded-lg hover:bg-green-700"
+          className="bg-blue-600 text-white px-4 py-2 rounded w-full hover:bg-blue-700 transition"
         >
           Sign Up
         </button>
       </form>
-
-      {/* Login link */}
-      <p className="mt-4 text-center text-gray-600">
-        Already have an account?{" "}
-        <Link to="/login" className="text-blue-600 hover:underline">
-          Log in
-        </Link>
-      </p>
     </div>
   );
 }
