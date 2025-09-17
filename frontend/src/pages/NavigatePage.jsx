@@ -20,7 +20,7 @@ const NavigatePage = () => {
           HOST
         </button>
         <button
-          onClick={() => navigate("/leaderboard")}
+          onClick={() => navigate("/playerpanel")}
           className="px-10 py-4 bg-white text-purple-700 font-semibold rounded-lg shadow-lg hover:bg-purple-100 transition"
         >
           PLAYER

@@ -1,80 +1,84 @@
-// import { useState, useEffect } from "react";
-// import io from "socket.io-client";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-// const socket = io("http://localhost:5000");
+// Mock data for demo (replace with backend API later)
+const mockGames = {
+  "123456": { title: "General Knowledge Quiz" },
+  "654321": { title: "Science Quiz" },
+};
 
-// export default function PlayerPanel() {
-//   const [playerName, setPlayerName] = useState("");
-//   const [gameCode, setGameCode] = useState("");
-//   const [question, setQuestion] = useState({});
-//   const [scores, setScores] = useState({});
+export default function PlayerPanel() {
+  const [playerName, setPlayerName] = useState("");
+  const [gameCode, setGameCode] = useState("");
+  const [error, setError] = useState("");
+  const [quizTitle, setQuizTitle] = useState("");
+  const [joined, setJoined] = useState(false);
 
-//   useEffect(() => {
-//     socket.on("nextQuestion", ({ questionIndex }) => {
-//       // In real app, fetch question by index from backend or server state
-//       setQuestion({ question: Question ${questionIndex + 1}?, options: ["A", "B", "C", "D"] });
-//     });
+  const navigate = useNavigate();
 
-//     socket.on("scoreUpdate", ({ scores }) => setScores(scores));
+  const joinGame = () => {
+    if (!playerName) {
+      setError("Please enter your name.");
+      return;
+    }
 
-//     return () => socket.off();
-//   }, []);
+    // Check if the game code exists
+    if (!mockGames[gameCode]) {
+      setError("Invalid game code. Please try again.");
+      return;
+    }
 
-//   const joinGame = () => {
-//     socket.emit("joinGame", { gameCode, playerName });
-//   };
+    setError("");
+    setQuizTitle(mockGames[gameCode].title);
+    setJoined(true);
+  };
 
-//   const submitAnswer = (answer) => {
-//     socket.emit("submitAnswer", { gameCode, answer });
-//   };
+  const startQuiz = () => {
+    // Navigate to the Quiz page with state
+    navigate("/quiz", { state: { playerName, gameCode, quizTitle } });
+  };
 
-//   return (
-//     <div className="p-6 max-w-2xl mx-auto">
-//       <h1 className="text-2xl font-bold mb-4">Player Panel</h1>
+  return (
+    <div className="p-6 max-w-md mx-auto">
+      <h1 className="text-2xl font-bold mb-4">Player Panel</h1>
 
-//       <input
-//         type="text"
-//         placeholder="Your Name"
-//         value={playerName}
-//         onChange={(e) => setPlayerName(e.target.value)}
-//         className="border p-2 rounded w-full mb-2"
-//       />
-//       <input
-//         type="text"
-//         placeholder="Game Code"
-//         value={gameCode}
-//         onChange={(e) => setGameCode(e.target.value)}
-//         className="border p-2 rounded w-full mb-4"
-//       />
-//       <button onClick={joinGame} className="bg-blue-600 text-white px-4 py-2 rounded mb-4">
-//         Join Game
-//       </button>
-
-//       {question.question && (
-//         <div className="border p-4 rounded mb-4">
-//           <h2 className="text-xl mb-2">{question.question}</h2>
-//           {question.options?.map((opt, i) => (
-//             <button
-//               key={i}
-//               onClick={() => submitAnswer(opt)}
-//               className="block w-full mb-2 p-2 border rounded hover:bg-gray-200"
-//             >
-//               {opt}
-//             </button>
-//           ))}
-//         </div>
-//       )}
-
-//       <div>
-//         <h2 className="text-xl font-bold">Scores:</h2>
-//         <ul>
-//           {Object.values(scores).map((p, i) => (
-//             <li key={i}>
-//               {p.name}: {p.score}
-//             </li>
-//           ))}
-//         </ul>
-//       </div>
-//     </div>
-//   );
-// }
+      {!joined ? (
+        <>
+          <input
+            type="text"
+            placeholder="Your Name"
+            value={playerName}
+            onChange={(e) => setPlayerName(e.target.value)}
+            className="border p-2 rounded w-full mb-2"
+          />
+          <input
+            type="text"
+            placeholder="Game Code"
+            value={gameCode}
+            onChange={(e) => setGameCode(e.target.value)}
+            className="border p-2 rounded w-full mb-2"
+          />
+          {error && <p className="text-red-600 mb-2">{error}</p>}
+          <button
+            onClick={joinGame}
+            className="bg-blue-600 text-white px-4 py-2 rounded w-full"
+          >
+            Join Game
+          </button>
+        </>
+      ) : (
+        <>
+          <p className="mb-4 text-lg">
+            You are joining: <strong>{quizTitle}</strong>
+          </p>
+          <button
+            onClick={startQuiz}
+            className="bg-green-600 text-white px-4 py-2 rounded w-full"
+          >
+            Start Quiz
+          </button>
+        </>
+      )}
+    </div>
+  );
+}

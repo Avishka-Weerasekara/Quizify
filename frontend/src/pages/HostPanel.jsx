@@ -1,17 +1,16 @@
 import { useState } from "react";
+import { db } from "../firebase-config"; // import Firestore
+import { collection, addDoc } from "firebase/firestore";
 
 export default function HostPanel() {
   const [quizTitle, setQuizTitle] = useState("");
   const [questions, setQuestions] = useState([
     { question: "", options: ["", "", "", ""], answer: "" },
   ]);
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [players, setPlayers] = useState([
-    { name: "Player 1", score: 0 },
-    { name: "Player 2", score: 0 },
-  ]);
   const [gameCode, setGameCode] = useState("");
+  const [players, setPlayers] = useState([]);
 
+  // Add new question
   const addQuestion = () => {
     setQuestions([
       ...questions,
@@ -19,6 +18,7 @@ export default function HostPanel() {
     ]);
   };
 
+  // Update question or options
   const handleQuestionChange = (index, field, value) => {
     const updated = [...questions];
     if (field === "question" || field === "answer") {
@@ -29,17 +29,40 @@ export default function HostPanel() {
     setQuestions(updated);
   };
 
-  const createGame = () => {
+  // Create game and save to Firestore
+  const createGame = async () => {
+    if (!quizTitle) {
+      alert("Please enter a quiz title.");
+      return;
+    }
+
+    if (questions.length === 0) {
+      alert("Please add at least one question.");
+      return;
+    }
+
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     setGameCode(code);
-    alert("Game Created! Share this code with players: " + code);
-  };
 
-  const nextQuestion = () => {
-    if (currentQuestion < questions.length - 1) {
-      setCurrentQuestion(currentQuestion + 1);
-    } else {
-      alert("Quiz Ended!");
+    try {
+      // Save each question as a separate document in 'quiz' collection
+      for (const q of questions) {
+        await addDoc(collection(db, "quiz"), {
+          gameCode: code,
+          title: quizTitle,
+          question: q.question,
+          option1: q.options[0],
+          option2: q.options[1],
+          option3: q.options[2],
+          option4: q.options[3],
+          answer: q.answer,
+        });
+      }
+
+      alert("Game Created! Share this code with players: " + code);
+    } catch (err) {
+      console.error("Error saving quiz:", err);
+      alert("Failed to create game. See console for details.");
     }
   };
 
@@ -61,7 +84,9 @@ export default function HostPanel() {
             type="text"
             placeholder="Question"
             value={q.question}
-            onChange={(e) => handleQuestionChange(idx, "question", e.target.value)}
+            onChange={(e) =>
+              handleQuestionChange(idx, "question", e.target.value)
+            }
             className="border p-2 rounded w-full mb-2"
           />
           {q.options.map((opt, i) => (
@@ -84,43 +109,22 @@ export default function HostPanel() {
         </div>
       ))}
 
-      <button
-        onClick={addQuestion}
-        className="bg-green-500 text-white px-4 py-2 rounded mr-2"
-      >
-        Add Question
-      </button>
-      <button
-        onClick={createGame}
-        className="bg-blue-600 text-white px-4 py-2 rounded"
-      >
-        Create Game
-      </button>
+      <div className="flex gap-2">
+        <button
+          onClick={addQuestion}
+          className="bg-green-500 text-white px-4 py-2 rounded"
+        >
+          Add Question
+        </button>
+        <button
+          onClick={createGame}
+          className="bg-blue-600 text-white px-4 py-2 rounded"
+        >
+          Create Game
+        </button>
+      </div>
 
       {gameCode && <p className="mt-4 text-xl">Game Code: {gameCode}</p>}
-
-      <div className="mt-6">
-        <h2 className="text-xl font-bold">Players Joined:</h2>
-        <ul>
-          {players.map((p, i) => (
-            <li key={i}>{p.name}</li>
-          ))}
-        </ul>
-
-        {questions.length > 0 && currentQuestion < questions.length && (
-          <div className="mt-4">
-            <h3 className="text-lg font-semibold">
-              Current Question: {questions[currentQuestion].question}
-            </h3>
-            <button
-              onClick={nextQuestion}
-              className="bg-purple-600 text-white px-4 py-2 rounded mt-2"
-            >
-              Next Question
-            </button>
-          </div>
-        )}
-      </div>
     </div>
   );
 }
