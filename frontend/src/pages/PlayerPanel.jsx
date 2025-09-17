@@ -1,41 +1,56 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-// Mock data for demo (replace with backend API later)
-const mockGames = {
-  "123456": { title: "General Knowledge Quiz" },
-  "654321": { title: "Science Quiz" },
-};
+import { db } from "../firebase-config";
+import { collection, query, where, getDocs } from "firebase/firestore";
 
 export default function PlayerPanel() {
   const [playerName, setPlayerName] = useState("");
   const [gameCode, setGameCode] = useState("");
   const [error, setError] = useState("");
   const [quizTitle, setQuizTitle] = useState("");
+  const [quizId, setQuizId] = useState(""); // store Firestore doc ID
   const [joined, setJoined] = useState(false);
 
   const navigate = useNavigate();
 
-  const joinGame = () => {
+  const joinGame = async () => {
     if (!playerName) {
       setError("Please enter your name.");
       return;
     }
 
-    // Check if the game code exists
-    if (!mockGames[gameCode]) {
-      setError("Invalid game code. Please try again.");
+    if (!gameCode) {
+      setError("Please enter the game code.");
       return;
     }
 
-    setError("");
-    setQuizTitle(mockGames[gameCode].title);
-    setJoined(true);
+    try {
+      const q = query(
+        collection(db, "quiz"),
+        where("gameCode", "==", gameCode)
+      );
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        setError("Invalid game code. Please try again.");
+        return;
+      }
+
+      // If game exists, get its title and Firestore doc ID
+      const quizDoc = querySnapshot.docs[0];
+      setQuizTitle(quizDoc.data().title);
+      setQuizId(quizDoc.id);
+      setError("");
+      setJoined(true);
+    } catch (err) {
+      console.error("Error checking game code:", err);
+      setError("Failed to join game. Try again later.");
+    }
   };
 
   const startQuiz = () => {
     // Navigate to the Quiz page with state
-    navigate("/quiz", { state: { playerName, gameCode, quizTitle } });
+    navigate("/quizpage", { state: { playerName, gameCode, quizTitle, quizId } });
   };
 
   return (

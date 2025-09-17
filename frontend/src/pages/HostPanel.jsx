@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { db } from "../firebase-config"; // import Firestore
-import { collection, addDoc } from "firebase/firestore";
+import { db } from "../firebase-config";
+import { collection, addDoc, doc, setDoc, serverTimestamp } from "firebase/firestore";
 
 export default function HostPanel() {
   const [quizTitle, setQuizTitle] = useState("");
@@ -10,7 +10,6 @@ export default function HostPanel() {
   const [gameCode, setGameCode] = useState("");
   const [players, setPlayers] = useState([]);
 
-  // Add new question
   const addQuestion = () => {
     setQuestions([
       ...questions,
@@ -18,7 +17,6 @@ export default function HostPanel() {
     ]);
   };
 
-  // Update question or options
   const handleQuestionChange = (index, field, value) => {
     const updated = [...questions];
     if (field === "question" || field === "answer") {
@@ -29,7 +27,6 @@ export default function HostPanel() {
     setQuestions(updated);
   };
 
-  // Create game and save to Firestore
   const createGame = async () => {
     if (!quizTitle) {
       alert("Please enter a quiz title.");
@@ -45,11 +42,17 @@ export default function HostPanel() {
     setGameCode(code);
 
     try {
-      // Save each question as a separate document in 'quiz' collection
+      // 1️⃣ Create main quiz document
+      const quizRef = doc(collection(db, "quiz")); // Auto-ID
+      await setDoc(quizRef, {
+        title: quizTitle,
+        createdAt: serverTimestamp(),
+        gameCode: code,
+      });
+
+      // 2️⃣ Create subcollection 'question-array' for each question
       for (const q of questions) {
-        await addDoc(collection(db, "quiz"), {
-          gameCode: code,
-          title: quizTitle,
+        await addDoc(collection(quizRef, "question-array"), {
           question: q.question,
           option1: q.options[0],
           option2: q.options[1],
@@ -61,8 +64,8 @@ export default function HostPanel() {
 
       alert("Game Created! Share this code with players: " + code);
     } catch (err) {
-      console.error("Error saving quiz:", err);
-      alert("Failed to create game. See console for details.");
+      console.error("Error creating quiz:", err);
+      alert("Failed to create quiz. See console for details.");
     }
   };
 
@@ -84,9 +87,7 @@ export default function HostPanel() {
             type="text"
             placeholder="Question"
             value={q.question}
-            onChange={(e) =>
-              handleQuestionChange(idx, "question", e.target.value)
-            }
+            onChange={(e) => handleQuestionChange(idx, "question", e.target.value)}
             className="border p-2 rounded w-full mb-2"
           />
           {q.options.map((opt, i) => (
